@@ -1,0 +1,178 @@
+{
+ "router": {
+  "train_examples": 1368,
+  "test": {
+   "examples": 216,
+   "learned_acc": 0.815,
+   "keyword_acc": 0.37,
+   "action_request_recall": {
+    "learned": 1.0,
+    "keyword": 0.0
+   }
+  },
+  "test2": {
+   "examples": 216,
+   "learned_acc": 0.829,
+   "keyword_acc": 0.444,
+   "action_request_recall": {
+    "learned": 0.6666666666666666,
+    "keyword": 0.3333333333333333
+   }
+  }
+ },
+ "injection_guard": {
+  "threshold(dev-chosen, target 5% FPR)": 0.6349,
+  "test": {
+   "new guard": {
+    "recall": 0.778,
+    "false_positive_rate": 0.042
+   },
+   "new guard OR regex": {
+    "recall": 0.944,
+    "false_positive_rate": 0.042
+   }
+  },
+  "test2": {
+   "new guard": {
+    "recall": 0.667,
+    "false_positive_rate": 0.028
+   },
+   "new guard OR regex": {
+    "recall": 0.667,
+    "false_positive_rate": 0.028
+   }
+  },
+  "test3": {
+   "new guard": {
+    "recall": 0.875,
+    "false_positive_rate": 0.131
+   },
+   "new guard OR regex": {
+    "recall": 0.875,
+    "false_positive_rate": 0.131
+   }
+  },
+  "ext_holdout": {
+   "new guard": {
+    "recall": 0.979,
+    "false_positive_rate": 0.006
+   },
+   "new guard OR regex": {
+    "recall": 0.983,
+    "false_positive_rate": 0.006
+   }
+  }
+ },
+ "injection_guard_v1_baseline": {
+  "train_examples": 264,
+  "test": {
+   "examples": 84,
+   "learned": {
+    "recall": 0.556,
+    "false_positive_rate": 0.0
+   },
+   "regex(HIVE)": {
+    "recall": 0.25,
+    "false_positive_rate": 0.0
+   },
+   "learned OR regex": {
+    "recall": 0.722,
+    "false_positive_rate": 0.0
+   }
+  },
+  "test2": {
+   "examples": 102,
+   "learned": {
+    "recall": 0.433,
+    "false_positive_rate": 0.111
+   },
+   "regex(HIVE)": {
+    "recall": 0.0,
+    "false_positive_rate": 0.0
+   },
+   "learned OR regex": {
+    "recall": 0.433,
+    "false_positive_rate": 0.111
+   }
+  }
+ },
+ "risk_scorer": {
+  "train_seeds": "1-40",
+  "test_seeds": "100-119 (held out)",
+  "threshold": 0.975,
+  "benign_txns_tested": 7202,
+  "learned": {
+   "recall_by_attack": {
+    "card_testing": "20/20",
+    "refund_abuse": "19/20",
+    "duplicate_payment": "20/20",
+    "new_customer_large": "20/20",
+    "failed_streak": "20/20",
+    "concentration_shift": "17/20"
+   },
+   "false_alarms_per_1000_benign": 6.1,
+   "hard_negative_flag_rate": 0.0
+  },
+  "rules": {
+   "recall_by_attack": {
+    "card_testing": "20/20",
+    "refund_abuse": "20/20",
+    "duplicate_payment": "20/20",
+    "new_customer_large": "20/20",
+    "failed_streak": "20/20",
+    "concentration_shift": "0/20"
+   },
+   "false_alarms_per_1000_benign": 9.7,
+   "hard_negative_flag_rate": 0.0
+  },
+  "either": {
+   "recall_by_attack": {
+    "card_testing": "20/20",
+    "refund_abuse": "20/20",
+    "duplicate_payment": "20/20",
+    "new_customer_large": "20/20",
+    "failed_streak": "20/20",
+    "concentration_shift": "17/20"
+   },
+   "false_alarms_per_1000_benign": 15.7,
+   "hard_negative_flag_rate": 0.0
+  }
+ },
+ "router_refusal_backstop": {
+  "test": {
+   "learned only": {
+    "refusal_recall": 0.833,
+    "false_refusal_rate": 0.036
+   },
+   "learned + backstop": {
+    "refusal_recall": 0.833,
+    "false_refusal_rate": 0.036
+   }
+  },
+  "test2": {
+   "learned only": {
+    "refusal_recall": 0.667,
+    "false_refusal_rate": 0.0
+   },
+   "learned + backstop": {
+    "refusal_recall": 0.792,
+    "false_refusal_rate": 0.0
+   }
+  },
+  "false_refusal_examples": [
+   "do I depend on one buyer",
+   "hey, do I depend on one buyer",
+   "queen, do I depend on one buyer"
+  ]
+ },
+ "retrieval": {
+  "docs": 417,
+  "queries": 150,
+  "recall_at_5": 0.9866666666666667,
+  "note": "sanity check: queries built from the record's own fields"
+ },
+ "pii": {
+  "cases": 6,
+  "passed": 6
+ }
+}

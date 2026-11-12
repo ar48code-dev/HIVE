@@ -1,0 +1,40 @@
+kind = "web"
+previewPath = "/hive/"
+title = "HIVE"
+description = "An AI-assisted PayPal risk investigation workspace for small merchants. It explains suspicious payment activity with traceable evidence, requires human approval for money-moving actions, and includes a transparent attack simulator."
+version = "1.0.0"
+id = "artifacts/hive"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/hive/" ]
+localPort = 23027
+
+[services.development]
+run = "pnpm --filter @workspace/hive run dev"
+
+[services.production.build]
+args = ["pnpm", "--filter", "@workspace/hive", "run", "build"]
+
+[services.production.build.env]
+PORT = "23027"
+BASE_PATH = "/hive/"
+NODE_ENV = "production"
+DEMO_MODE = "true"
+
+[services.production.run]
+args = ["node", "artifacts/hive/scripts/start-prod.mjs"]
+
+[services.production.run.env]
+PORT = "23027"
+BASE_PATH = "/hive/"
+NODE_ENV = "production"
+DEMO_MODE = "true"
+
+[services.production.health.startup]
+path = "/hive/health"
+
+[services.env]
+PORT = "23027"
+BASE_PATH = "/hive/"

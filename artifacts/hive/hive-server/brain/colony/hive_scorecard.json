@@ -1,0 +1,64 @@
+{
+ "augmented": true,
+ "train": {
+  "streams": 2100,
+  "rows": 263328,
+  "attack_rows": 16200
+ },
+ "threshold": 0.722,
+ "test_seeds": "100-119 (held out, same generator)",
+ "card_testing": {
+  "model": "20/20",
+  "hive rules": "20/20",
+  "model OR rules": "20/20"
+ },
+ "concentration_shift": {
+  "model": "20/20",
+  "hive rules": "19/20",
+  "model OR rules": "20/20"
+ },
+ "duplicate_payment": {
+  "model": "20/20",
+  "hive rules": "20/20",
+  "model OR rules": "20/20"
+ },
+ "failed_streak": {
+  "model": "20/20",
+  "hive rules": "20/20",
+  "model OR rules": "20/20"
+ },
+ "new_customer_large": {
+  "model": "20/20",
+  "hive rules": "20/20",
+  "model OR rules": "20/20"
+ },
+ "refund_abuse": {
+  "model": "20/20",
+  "hive rules": "20/20",
+  "model OR rules": "20/20"
+ },
+ "slow_card_testing": {
+  "model": "20/20",
+  "hive rules": "20/20",
+  "model OR rules": "20/20"
+ },
+ "false_alarms_per_1000_benign": {
+  "model": 11.1,
+  "hive rules": 10.2,
+  "model OR rules": 18.5
+ },
+ "hard_negative_false_alarm_rate": {
+  "model": 0.002,
+  "hive rules": 0.016,
+  "model OR rules": 0.018
+ },
+ "cross_generator (colony/sim.py streams, never trained on)": {
+  "card_testing": "20/20",
+  "concentration_shift": "7/20",
+  "duplicate_payment": "10/20",
+  "failed_streak": "20/20",
+  "new_customer_large": "20/20",
+  "refund_abuse": "9/20",
+  "false_alarms_per_1000_benign": 33.9
+ }
+}

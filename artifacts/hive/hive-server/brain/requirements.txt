@@ -1,0 +1,2 @@
+# The brain needs only numpy. (The optional tiny policy-parsing language model, which needs JAX, is not included in this repo.)
+numpy>=1.26

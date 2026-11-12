@@ -1,0 +1,12 @@
+{
+  "name": "hive-source-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.26.1",
+  "scripts": {
+    "dev": "pnpm --filter @workspace/hive run dev",
+    "test": "pnpm --filter @workspace/hive run test",
+    "typecheck": "pnpm --filter @workspace/hive run typecheck",
+    "build": "pnpm --filter @workspace/hive run build"
+  }
+}

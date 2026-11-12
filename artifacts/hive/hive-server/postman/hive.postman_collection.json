@@ -1,0 +1,375 @@
+{
+  "info": {
+    "name": "HIVE: PayPal sandbox calls and HIVE API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Sandbox only. Put credentials in the environment variables, never in the collection."
+  },
+  "item": [
+    {
+      "name": "PayPal sandbox",
+      "item": [
+        {
+          "name": "1. Get access token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{client_secret}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{paypal_base}}/v1/oauth2/token"
+            },
+            "description": "Copy access_token from the response into the access_token variable."
+          }
+        },
+        {
+          "name": "2. Create order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{paypal_base}}/v2/checkout/orders",
+              "host": [
+                "{{paypal_base}}"
+              ]
+            },
+            "description": "Open the approve link as a sandbox buyer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"intent\": \"CAPTURE\",\n  \"purchase_units\": [\n    {\n      \"amount\": {\n        \"currency_code\": \"USD\",\n        \"value\": \"10.00\"\n      },\n      \"custom_id\": \"hive-demo\"\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "3. Get order",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{paypal_base}}/v2/checkout/orders/{{order_id}}",
+              "host": [
+                "{{paypal_base}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "4. Capture order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{paypal_base}}/v2/checkout/orders/{{order_id}}/capture",
+              "host": [
+                "{{paypal_base}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "5. Refund capture",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{paypal_base}}/v2/payments/captures/{{capture_id}}/refund",
+              "host": [
+                "{{paypal_base}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {\n    \"value\": \"10.00\",\n    \"currency_code\": \"USD\"\n  },\n  \"note_to_payer\": \"Test refund\"\n}"
+            }
+          }
+        },
+        {
+          "name": "6. Transaction Search (last 2 days)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{paypal_base}}/v1/reporting/transactions?start_date={{start}}&end_date={{end}}&fields=all&page_size=100&page=1",
+              "host": [
+                "{{paypal_base}}"
+              ]
+            },
+            "description": "Needs Transaction Search enabled on the app. Results can lag by hours."
+          }
+        },
+        {
+          "name": "7. Register webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{paypal_base}}/v1/notifications/webhooks",
+              "host": [
+                "{{paypal_base}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://YOUR-PUBLIC-HOST/hive/webhooks/paypal\",\n  \"event_types\": [\n    {\n      \"name\": \"PAYMENT.CAPTURE.COMPLETED\"\n    },\n    {\n      \"name\": \"PAYMENT.CAPTURE.DENIED\"\n    },\n    {\n      \"name\": \"PAYMENT.CAPTURE.REFUNDED\"\n    },\n    {\n      \"name\": \"PAYMENT.CAPTURE.REVERSED\"\n    }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "HIVE API",
+      "item": [
+        {
+          "name": "Mode",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{hive}}/api/mode",
+              "host": [
+                "{{hive}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{hive}}/api/summary",
+              "host": [
+                "{{hive}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Alerts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{hive}}/api/alerts",
+              "host": [
+                "{{hive}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Ask Queen",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{hive}}/api/queen/ask",
+              "host": [
+                "{{hive}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Why did my money change this month?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Simulate card testing (demo only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{hive}}/api/demo/simulate",
+              "host": [
+                "{{hive}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attack\": \"card_testing\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Backfill 30 days (live only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{hive}}/api/backfill",
+              "host": [
+                "{{hive}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"days\": 30\n}"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "paypal_base",
+      "value": "https://api-m.sandbox.paypal.com"
+    },
+    {
+      "key": "hive",
+      "value": "http://localhost:23027/hive"
+    },
+    {
+      "key": "client_id",
+      "value": ""
+    },
+    {
+      "key": "client_secret",
+      "value": ""
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "order_id",
+      "value": ""
+    },
+    {
+      "key": "capture_id",
+      "value": ""
+    },
+    {
+      "key": "start",
+      "value": "2026-10-30T00:00:00Z"
+    },
+    {
+      "key": "end",
+      "value": "2026-11-01T00:00:00Z"
+    }
+  ]
+}
