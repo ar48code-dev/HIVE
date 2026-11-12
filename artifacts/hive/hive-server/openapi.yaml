@@ -1,0 +1,690 @@
+openapi: 3.1.0
+info:
+  title: HIVE Financial Intelligence API
+  version: 1.0.0
+  description: >-
+    HIVE investigates PayPal transactions, detects suspicious activity,
+    manages fraud alerts and seller operations, and provides a read-only
+    Model Context Protocol (MCP) interface for external AI agents.
+    HIVE provides advisory risk assessments and does not guarantee fraud prevention.
+servers:
+  - url: https://api.example.com
+    description: Replace with your deployed HIVE server URL
+tags:
+  - name: System
+  - name: Authentication
+  - name: Intelligence
+  - name: Transactions
+  - name: Alerts
+  - name: Operations
+  - name: PayPal
+  - name: AI
+  - name: MCP
+security: []
+paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      responses:
+        '200':
+          description: Server health
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+  /api/mode:
+    get:
+      tags: [System]
+      summary: Get HIVE operating mode
+      responses:
+        '200':
+          description: Current operating mode
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  demo: { type: boolean }
+                  ai: { type: string }
+                  authRequired: { type: boolean }
+                  brain: { type: boolean }
+                  secondOpinion: { type: boolean }
+  /api/auth/check:
+    post:
+      tags: [Authentication]
+      summary: Verify administrator access
+      security:
+        - AdminToken: []
+      responses:
+        '200':
+          description: Token accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/queen/suggestions:
+    get:
+      tags: [AI]
+      summary: Get AI investigation suggestions
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/connections:
+    get:
+      tags: [System]
+      summary: Check integration connection status
+      parameters:
+        - name: test
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/connections/gmail-test:
+    post:
+      tags: [System]
+      summary: Test Gmail alert delivery
+      security:
+        - AdminToken: []
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '409':
+          $ref: '#/components/responses/Error'
+        '502':
+          $ref: '#/components/responses/Error'
+  /api/studio/turn:
+    post:
+      tags: [AI]
+      summary: Submit an AI studio conversation turn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+        '502':
+          $ref: '#/components/responses/Error'
+        '503':
+          $ref: '#/components/responses/Error'
+  /api/disputes:
+    get:
+      tags: [PayPal]
+      summary: List PayPal dispute cases
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '502':
+          $ref: '#/components/responses/Error'
+  /api/disputes/{id}/prepare:
+    post:
+      tags: [PayPal]
+      summary: Prepare a dispute response for review
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '404':
+          $ref: '#/components/responses/Error'
+  /api/payouts:
+    get:
+      tags: [Operations]
+      summary: List payout operations and daily usage
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+    post:
+      tags: [Operations]
+      summary: Propose a payout
+      security:
+        - AdminToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, amount, note]
+              properties:
+                email: { type: string, format: email }
+                amount: { type: number, exclusiveMinimum: 0, description: Amount in dollars }
+                note: { type: string, maxLength: 150 }
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/invoices:
+    get:
+      tags: [Operations]
+      summary: List invoices and recurring payment suggestions
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+    post:
+      tags: [Operations]
+      summary: Create an invoice operation
+      security:
+        - AdminToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, amount, description]
+              properties:
+                customer: { type: string, maxLength: 20 }
+                email: { type: string, format: email }
+                amount: { type: number, exclusiveMinimum: 0, maximum: 100000 }
+                description: { type: string, maxLength: 120 }
+                dueDays: { type: integer, minimum: 1, maximum: 60, default: 10 }
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/ops/{id}/send:
+    post:
+      tags: [Operations]
+      summary: Execute an approved operation
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirm: { type: boolean, const: true }
+              required: [confirm]
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+  /api/ops/{id}/decision:
+    post:
+      tags: [Operations]
+      summary: Approve or reject an operation
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [approve, reject] }
+                confirm: { type: boolean }
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '502':
+          $ref: '#/components/responses/Error'
+  /api/agent:
+    get:
+      tags: [MCP]
+      summary: Get agent tools and recent activity
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /mcp:
+    post:
+      tags: [MCP]
+      summary: MCP JSON-RPC endpoint
+      description: >-
+        Accepts JSON-RPC 2.0 requests for initialize, ping, tools/list,
+        and tools/call. All exposed HIVE tools are read-only and advisory.
+        Agent bearer authentication may be required when AGENT_TOKEN is configured.
+      security:
+        - AgentBearer: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jsonrpc, method]
+              properties:
+                jsonrpc: { type: string, const: '2.0' }
+                id: {}
+                method:
+                  type: string
+                  enum: [initialize, notifications/initialized, ping, tools/list, tools/call]
+                params:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: JSON-RPC result or JSON-RPC error
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '202':
+          description: Notification accepted
+        '405':
+          description: GET is not supported for MCP
+  /api/config:
+    get:
+      tags: [System]
+      summary: Get public client configuration
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/customers:
+    get:
+      tags: [Intelligence]
+      summary: List customer aliases and intelligence
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/recurring:
+    get:
+      tags: [Intelligence]
+      summary: Get recurring payment intelligence
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/growth:
+    get:
+      tags: [Intelligence]
+      summary: Get seller growth intelligence
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/demo/simulate:
+    post:
+      tags: [System]
+      summary: Simulate a demo fraud scenario
+      description: Available only in demo mode.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [attack]
+              properties:
+                attack: { type: string }
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+  /api/backfill:
+    post:
+      tags: [Transactions]
+      summary: Backfill transaction history
+      security:
+        - AdminToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                days: { type: integer, minimum: 1, maximum: 90, default: 30 }
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '503':
+          $ref: '#/components/responses/Error'
+  /api/summary:
+    get:
+      tags: [Intelligence]
+      summary: Get financial intelligence summary
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/transactions:
+    get:
+      tags: [Transactions]
+      summary: List transaction history
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/alerts:
+    get:
+      tags: [Alerts]
+      summary: List fraud and abuse alerts
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/alerts/{id}:
+    get:
+      tags: [Alerts]
+      summary: Get alert details and associated actions
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '404':
+          $ref: '#/components/responses/Error'
+  /api/alerts/{id}/status:
+    post:
+      tags: [Alerts]
+      summary: Update alert status
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [open, reviewed, dismissed] }
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+  /api/queen/ask:
+    post:
+      tags: [AI]
+      summary: Ask HIVE Queen an investigation question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string, minLength: 1 }
+                alertId: { type: string }
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+  /api/actions/{id}/decision:
+    post:
+      tags: [Operations]
+      summary: Approve or reject a proposed action
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [approve, reject] }
+                confirm: { type: boolean }
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '502':
+          $ref: '#/components/responses/Error'
+  /api/brain/second-opinion:
+    get:
+      tags: [AI]
+      summary: Get optional second-opinion risk assessment
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '503':
+          $ref: '#/components/responses/Error'
+  /api/brain/policy/{path}:
+    post:
+      tags: [AI]
+      summary: Submit an administrator policy-brain operation
+      description: Supported path values are create, confirm, and authorize.
+      security:
+        - AdminToken: []
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [create, confirm, authorize]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '503':
+          $ref: '#/components/responses/Error'
+  /api/wasplab:
+    get:
+      tags: [Intelligence]
+      summary: Get Wasp Lab evaluation report
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/wasplab/run:
+    post:
+      tags: [Intelligence]
+      summary: Run Wasp Lab fraud evaluation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seeds: { type: integer, minimum: 1, maximum: 30, default: 10 }
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/audit:
+    get:
+      tags: [Intelligence]
+      summary: Get audit log
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+  /api/checkout/create:
+    post:
+      tags: [PayPal]
+      summary: Create a PayPal Sandbox checkout order
+      description: Demo mode does not support live checkout. Only fixed catalogue amounts are accepted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, requestId]
+              properties:
+                amount:
+                  type: string
+                  enum: ['1.00', '5.00', '25.00', '120.00']
+                requestId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+        '503':
+          $ref: '#/components/responses/Error'
+  /api/checkout/capture:
+    post:
+      tags: [PayPal]
+      summary: Capture a PayPal Sandbox checkout order
+      description: Captures an existing order; this operation moves money in the configured PayPal environment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId]
+              properties:
+                orderId:
+                  type: string
+                  pattern: '^[A-Z0-9]{10,30}$'
+      responses:
+        '200':
+          $ref: '#/components/responses/JsonObject'
+        '202':
+          $ref: '#/components/responses/JsonObject'
+        '400':
+          $ref: '#/components/responses/Error'
+        '503':
+          $ref: '#/components/responses/Error'
+  /webhooks/paypal:
+    post:
+      tags: [PayPal]
+      summary: Receive PayPal webhook events
+      description: Raw webhook payload endpoint. Signature verification is handled by HIVE.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Webhook processed
+        '400':
+          description: Invalid webhook
+components:
+  securitySchemes:
+    AdminToken:
+      type: apiKey
+      in: header
+      name: X-Admin-Token
+      description: Administrator token configured by the HIVE operator.
+    AgentBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: Optional agent token when AGENT_TOKEN is configured.
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    Transaction:
+      type: object
+      required: [id, kind, amountCents, feeCents, currency, customerKey, at, source]
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [payment, refund, failed] }
+        amountCents: { type: integer }
+        feeCents: { type: integer }
+        currency: { type: string }
+        customerKey: { type: string, description: Salted payer hash, not raw payer data }
+        at: { type: integer, description: Epoch milliseconds }
+        note: { type: string, description: Untrusted PayPal free text }
+        source: { type: string, enum: [paypal, synthetic] }
+    Alert:
+      type: object
+      required: [txnId, at, score, severity, signals, nextStep]
+      properties:
+        txnId: { type: string }
+        at: { type: integer }
+        score: { type: number }
+        severity: { type: string, enum: [low, medium, high] }
+        signals:
+          type: array
+          items:
+            type: object
+            properties:
+              rule: { type: string }
+              weight: { type: number }
+              reason: { type: string }
+              evidenceIds:
+                type: array
+                items: { type: string }
+        nextStep: { type: string }
+  responses:
+    Error:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing or invalid administrator token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    JsonObject:
+      description: Successful JSON response
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
